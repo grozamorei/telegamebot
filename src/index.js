@@ -14,7 +14,7 @@ const pingAnswers = ['pong', 'pong', 'я же сказал что работае
 //
 // middleware
 app.use((ctx, next) => {
-    console.log(ctx.updateType, ctx.updateSubTypes)
+    console.log('META MIDDLE: ', ctx.updateType, ctx.updateSubTypes)
     return next()
 })
 
@@ -28,7 +28,18 @@ app.command('/ping', ctx =>  {
     }
 })
 
-app.command('/play', ctx => ctx.reply('not implemented'))
+app.command('/play', ctx => {
+    ctx.replyWithGame('strategy_test', Extra.markup(
+        Markup.inlineKeyboard([
+            Markup.gameButton('Play'),
+            Markup.urlButton('Another option', 'https://google.com')
+        ])
+    ))
+})
+app.gameQuery(ctx => {
+    console.log('game query')
+    ctx.answerGameQuery('http://88.80.185.233:8080/')
+})
 
 app.command('/poll', ctx => {
     return ctx.replyWithHTML('<b>One</b> or <i>Another</i>', Markup.inlineKeyboard(
@@ -58,6 +69,12 @@ app.hears(['one', 'two', 'three', 'four', 'five', 'six'], (ctx, next) => {
     return ctx.reply('OUKEY', Markup.removeKeyboard(true).extra()).then(next)
 })
 
+
+app.on('group_chat_created', ctx => {
+    const m = ctx.update.message
+    const groupTitle = m.chat.title
+    ctx.telegram.sendMessage(m.chat.id, "Thanks for invite to group " + groupTitle)
+})
 app.on('new_chat_member', ctx => {
     const m = ctx.update.message
     if (m.new_chat_member.username === ctx.me) {
