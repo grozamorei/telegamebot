@@ -19,7 +19,6 @@ app.use((ctx, next) => {
 })
 
 app.command('/ping', ctx =>  {
-    console.log('incoming ping')
     const chat = ctx.update.message.chat.id
     const db = ctx.chatDb
     db.add(chat)
@@ -29,13 +28,34 @@ app.command('/ping', ctx =>  {
     }
 })
 
-app.command('/play', ({reply}) => reply('not implemented'))
+app.command('/play', ctx => ctx.reply('not implemented'))
 
-app.command('/setshit', ctx => {
-    ctx.reply('', Markup.keyboard(['lol', 'twah', 'third']).resize().extra())
+app.command('/poll', ctx => {
+    return ctx.replyWithHTML('<b>One</b> or <i>Another</i>', Markup.inlineKeyboard(
+        [
+            Markup.callbackButton('One', 'One'),
+            Markup.callbackButton('Another', 'Another'),
+            Markup.callbackButton('Third', 'Third')
+        ]
+    ).extra())
 })
-app.command('/unsetshit', ctx => {
-    ctx.reply('what?')
+app.action(/.+/, ctx => {
+    if (ctx.match[0] === 'Third') {
+        return ctx.answerCallbackQuery('oh, you think you smart')
+    }
+    return ctx.answerCallbackQuery('sure, ' + ctx.match[0] + ' is very nice')
+})
+
+
+app.command('/poll2', ctx => {
+    return ctx.reply('Keyboard wrap', Extra.markup(
+        Markup.keyboard(['one', 'two', 'three', 'four', 'five', 'six'], {
+            wrap: (btn, index, currentRow) => currentRow.length >= (index + 1) / 2
+        })
+    ))
+})
+app.hears(['one', 'two', 'three', 'four', 'five', 'six'], (ctx, next) => {
+    return ctx.reply('OUKEY', Markup.removeKeyboard(true).extra()).then(next)
 })
 
 app.on('new_chat_member', ctx => {
@@ -56,14 +76,6 @@ app.on('left_chat_member', ctx => {
         const leftMember = m.left_chat_member.first_name
         ctx.telegram.sendMessage(m.chat.id, "Sorry to see you go, " + leftMember)
     }
-})
-
-app.on('message', ctx => {
-    // ctx.reply(ctx.from.first_name + ', you said "' + ctx.message.text + '"')
-})
-app.on('inline_query', ctx => {
-    // ctx.telegram.answerInlineQuery(ctx.inlineQuery.id, ['inline query detected'])
-    // ctx.reply('inline query detected')
 })
 
 app.startPolling()
