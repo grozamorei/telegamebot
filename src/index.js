@@ -28,6 +28,8 @@ app.command('/ping', ctx =>  {
     }
 })
 
+app.command('/ifconfig', ctx => ctx.reply(require('./getip').do()))
+
 let redirectAddr
 const gameReply = (addr, ctx) => {
     redirectAddr = addr
