@@ -28,17 +28,21 @@ app.command('/ping', ctx =>  {
     }
 })
 
-app.command('/play', ctx => {
+let redirectAddr
+const gameReply = (addr, ctx) => {
+    redirectAddr = addr
     ctx.replyWithGame('strategy_test', Extra.markup(
         Markup.inlineKeyboard([
-            Markup.gameButton('Play'),
-            Markup.urlButton('Another option', 'https://google.com')
+            Markup.gameButton('Play')
         ])
     ))
-})
+}
+app.command('/play', ctx => gameReply(config.urls.angryFrog[process.env.NODE_ENV], ctx))
+app.command('/playLocal', ctx => gameReply(config.urls.angryFrog['development'], ctx))
+app.command('/playProduction', ctx => gameReply(config.urls.angryFrog['production'], ctx))
 app.gameQuery(ctx => {
-    console.log('game query')
-    ctx.answerGameQuery('http://88.80.185.233:8080/')
+    console.log('redirecting to', redirectAddr)
+    ctx.answerGameQuery(redirectAddr)
 })
 
 app.command('/poll', ctx => {
