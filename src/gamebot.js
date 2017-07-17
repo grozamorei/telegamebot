@@ -33,7 +33,7 @@ app.command('/ifconfig', ctx => ctx.reply(require('./getip').do()))
 let redirectAddr
 const gameReply = (addr, ctx) => {
     redirectAddr = addr
-    ctx.replyWithGame('strategy_test', Extra.markup(
+    ctx.replyWithGame('angry_frogs', Extra.markup(
         Markup.inlineKeyboard([
             Markup.gameButton('Play')
         ])
