@@ -11,7 +11,6 @@ app.context.chatDb = {
 
 const pingAnswers = ['pong', 'pong2', 'я же сказал что работает', 'себе команду тереби, сука']
 
-
 //
 // middleware
 app.use((ctx, next) => {
