@@ -9,7 +9,7 @@ app.context.chatDb = {
     retrieve: (key) => key in chatDb ? chatDb[key] : 0
 }
 
-const pingAnswers = ['pong', 'pong2', 'я же сказал что работает', 'себе команду тереби, сука']
+const pingAnswers = ['понг', 'второй понг', 'я же сказал что работает', 'себе команду тереби, сука']
 
 //
 // middleware
