@@ -4,9 +4,12 @@ const {Telegram, Extra, Markup} = Telegraf
 
 const app = new Telegraf(config.key, {username: config.username})
 const chatDb = {}
+const sandboxDb = {}
 app.context.chatDb = {
     add: (key) => key in chatDb ? chatDb[key] += 1 : chatDb[key] = 0,
-    retrieve: (key) => key in chatDb ? chatDb[key] : 0
+    retrieve: (key) => key in chatDb ? chatDb[key] : 0,
+    setUserSandbox: (user, value) => sandboxDb[user] = value,
+    getUserSandbox: user => user in sandboxDb ? sandboxDb[user] : process.env.NODE_ENV
 }
 
 const pingAnswers = ['понг', 'второй понг', 'я же сказал что работает', 'себе команду тереби, сука']
@@ -14,7 +17,7 @@ const pingAnswers = ['понг', 'второй понг', 'я же сказал 
 //
 // middleware
 app.use((ctx, next) => {
-    console.log('META MIDDLE: ', ctx.updateType, ctx.updateSubTypes)
+    console.log(JSON.stringify(ctx.update))
     return next()
 })
 
@@ -30,21 +33,24 @@ app.command('/ping', ctx =>  {
 
 app.command('/ifconfig', ctx => ctx.reply(require('./getip').do()))
 
-let redirectAddr
-const gameReply = (addr, ctx) => {
-    redirectAddr = addr
+const gameReply = (sandbox, ctx) => {
+    ctx.chatDb.setUserSandbox(ctx.update.message.from.id, sandbox)
     ctx.replyWithGame('angry_frogs', Extra.markup(
         Markup.inlineKeyboard([
             Markup.gameButton('Play')
         ])
     ))
 }
-app.command('/play', ctx => gameReply(config.urls.angryFrog[process.env.NODE_ENV], ctx))
-app.command('/playLocal', ctx => gameReply(config.urls.angryFrog['development'], ctx))
-app.command('/playProduction', ctx => gameReply(config.urls.angryFrog['production'], ctx))
+app.command('/play', ctx => gameReply(process.env.NODE_ENV, ctx))
+app.command('/playLocal', ctx => gameReply('development', ctx))
+app.command('/playProduction', ctx => gameReply('production', ctx))
 app.gameQuery(ctx => {
-    console.log('redirecting to', redirectAddr)
-    ctx.answerGameQuery(redirectAddr)
+    const query = ctx.update.callback_query
+    let gameAddr = config.urls.angryFrog[ctx.chatDb.getUserSandbox(query.from.id)]
+    gameAddr += '?userId=' + query.from.id + '&userName=' + query.from.first_name + '|' + query.from.last_name +
+            '&chat=' + query.chat_instance + '&messageId=' + query.message.message_id
+    console.log('redirecting to', gameAddr)
+    ctx.answerGameQuery(gameAddr)
 })
 
 app.command('/poll', ctx => {
