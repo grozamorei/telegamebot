@@ -47,10 +47,10 @@ app.command('/playProduction', ctx => gameReply('production', ctx))
 app.gameQuery(ctx => {
     const query = ctx.update.callback_query
     let gameAddr = config.urls.angryFrog[ctx.chatDb.getUserSandbox(query.from.id)]
-    gameAddr += '?userId=' + query.from.id + '&userName=' + query.from.first_name + '|' + query.from.last_name +
+    gameAddr += '?userId=' + query.from.id + '&userName=' + query.from.first_name + ' ' + query.from.last_name +
             '&chat=' + query.chat_instance + '&messageId=' + query.message.message_id
-    console.log('redirecting to', gameAddr)
-    ctx.answerGameQuery(gameAddr)
+    console.log('redirecting to', encodeURI(gameAddr))
+    ctx.answerGameQuery(encodeURI(gameAddr))
 })
 
 app.command('/poll', ctx => {
