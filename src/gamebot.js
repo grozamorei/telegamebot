@@ -138,7 +138,7 @@ const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
         body = JSON.parse(Buffer.concat(body).toString())
         console.log('INCOMING POST DATA: ' + JSON.stringify(body))
 
-        app.telegram.setGameScore(body.userId, body.score, undefined, undefined, body.messageId)
+        app.telegram.setGameScore(body.userId, body.score)
 
         res.statusCode = 200
         res.setHeader("Access-Control-Allow-Origin", "*");
