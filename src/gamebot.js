@@ -126,15 +126,25 @@ if (process.env.NODE_ENV === 'production') {
     }
 }
 const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
-    console.log(req)
-    res.setHeader('Access-Control-Allow-Headers', config.host[process.env.NODE_ENV]);
-    if (req.method === 'POST') {
-        res.writeHead(200)
+    const {headers, method, url} = request
+    console.log(headers, method, url)
+
+    let body = []
+    request.on('error', e => {
+        console.error(e)
+    }).on('data', chunk => {
+        body.push(chunk)
+    }).on('end', () => {
+        body = Buffer.concat(body).toString()
+        console.log('INCOMING POST DATA: ' + body)
+
+        res.statusCode = 200
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Origin", config.host[process.env.NODE_ENV]);
+        res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        res.write(JSON.stringify(body))
         res.end()
-        return
-    }
-    res.writeHead(404)
-    res.end()
+    })
 }).listen(config.tls.port)
 
 app.startPolling()
