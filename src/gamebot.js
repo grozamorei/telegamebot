@@ -130,7 +130,7 @@ const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
     console.log(headers, method, url)
 
     let body = []
-    request.on('error', e => {
+    req.on('error', e => {
         console.error(e)
     }).on('data', chunk => {
         body.push(chunk)
