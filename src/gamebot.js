@@ -116,15 +116,25 @@ app.on('left_chat_member', ctx => {
     }
 })
 
+
+let tlsOpts = {}
 if (process.env.NODE_ENV === 'production') {
     const fs = require("fs");
-     const tlsOpts = {
+     tlsOpts = {
         key: fs.readFileSync(config.tls.key),
         cert: fs.readFileSync(config.tls.cert)
     }
-
-    app.telegram.setWebhook('https://' + config.host[process.env.NODE_ENV] + '/webhook', tlsOpts.cert)
-    app.startWebhook('/setScore', tlsOpts, config.tls.port, config.host[process.env.NODE_ENV])
-} else {
-    app.startPolling()
 }
+const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
+    console.log(req)
+    res.setHeader('Access-Control-Allow-Headers', config.host[process.env.NODE_ENV]);
+    if (req.method === 'POST') {
+        res.writeHead(200)
+        res.end()
+        return
+    }
+    res.writeHead(404)
+    res.end()
+}).listen(config.tls.port)
+
+app.startPolling()
