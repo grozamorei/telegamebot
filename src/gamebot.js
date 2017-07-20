@@ -122,10 +122,12 @@ if (process.env.NODE_ENV === 'production') {
         key: fs.readFileSync(config.tls.key),
         cert: fs.readFileSync(config.tls.cert)
     }
-    // app.telegram.setWebhook(
-    //     'https://' + config.host + ':' + config.tls.port + '/setScore',
-    //     {content: config.tls.key})
-    app.startWebhook('/setScore', tlsOpts, config.tls.port)
+    app.startWebhook('/setScore',
+        tlsOpts, config.tls.port,
+        config.host.production,
+        data => {
+            console.log('webhook callback! ', JSON.stringify(data))
+        })
 } else {
     app.startWebhook('/setScore', null, config.tls.port)
 }
