@@ -118,18 +118,13 @@ app.on('left_chat_member', ctx => {
 
 if (process.env.NODE_ENV === 'production') {
     const fs = require("fs");
-    const tlsOpts = {
+     const tlsOpts = {
         key: fs.readFileSync(config.tls.key),
         cert: fs.readFileSync(config.tls.cert)
     }
-    app.startWebhook('/setScore',
-        tlsOpts, config.tls.port,
-        config.host.production,
-        data => {
-            console.log('webhook callback! ', JSON.stringify(data))
-        })
-} else {
-    app.startWebhook('/setScore', null, config.tls.port)
-}
 
-app.startPolling()
+    app.telegram.setWebhook('https://' + config.host[process.env.NODE_ENV] + '/webhook', tlsOpts.cert)
+    app.startWebhook('/setScore', tlsOpts, config.tls.port, config.host[process.env.NODE_ENV])
+} else {
+    app.startPolling()
+}
