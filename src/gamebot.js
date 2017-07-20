@@ -126,7 +126,7 @@ if (process.env.NODE_ENV === 'production') {
     }
 }
 const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
-    const {headers, method, url} = request
+    const {headers, method, url} = req
     console.log(headers, method, url)
 
     let body = []
