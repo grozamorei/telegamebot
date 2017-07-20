@@ -2,6 +2,7 @@ const config = require(process.env.CONFIG)
 const Telegraf = require('telegraf')
 const {Telegram, Extra, Markup} = Telegraf
 
+const backlog = []
 const app = new Telegraf(config.key, {username: config.username})
 const chatDb = {}
 const sandboxDb = {}
@@ -17,7 +18,11 @@ const pingAnswers = ['понг', 'второй понг', 'я же сказал 
 //
 // middleware
 app.use((ctx, next) => {
-    console.log(JSON.stringify(ctx.update))
+    const update = JSON.stringify(ctx.update)
+    console.log(update)
+    if (ctx.updateType === 'message' && ctx.update.message.text !== '/getUpdates') {
+        backlog.push(update)
+    }
     return next()
 })
 
@@ -32,6 +37,9 @@ app.command('/ping', ctx =>  {
 })
 
 app.command('/ifconfig', ctx => ctx.reply(require('./getip').do()))
+app.command('/getUpdates', ctx => {
+    ctx.reply(backlog.length > 0 ? backlog.shift() : 'updates empty')
+})
 
 const gameReply = (sandbox, ctx) => {
     ctx.chatDb.setUserSandbox(ctx.update.message.from.id, sandbox)
@@ -46,7 +54,8 @@ app.command('/playLocal', ctx => gameReply('development', ctx))
 app.command('/playProduction', ctx => gameReply('production', ctx))
 app.gameQuery(ctx => {
     const query = ctx.update.callback_query
-    let gameAddr = config.urls.angryFrog[ctx.chatDb.getUserSandbox(query.from.id)]
+    const sb = ctx.chatDb.getUserSandbox(query.from.id)
+    let gameAddr = 'https://' + config.host[sb] + ':' + config.games.angryFrog
     gameAddr += '?userId=' + query.from.id + '&userName=' + query.from.first_name + ' ' + query.from.last_name +
             '&chat=' + query.chat_instance + '&messageId=' + query.message.message_id
     console.log('redirecting to', encodeURI(gameAddr))
@@ -106,5 +115,19 @@ app.on('left_chat_member', ctx => {
         ctx.telegram.sendMessage(m.chat.id, "Sorry to see you go, " + leftMember)
     }
 })
+
+if (process.env.NODE_ENV === 'production') {
+    const fs = require("fs");
+    const tlsOpts = {
+        key: fs.readFileSync(config.tls.key),
+        cert: fs.readFileSync(config.tls.cert)
+    }
+    app.telegram.setWebhook(
+        'https://' + config.host + ':' + config.tls.port + '/setScore',
+        {content: config.tls.key})
+    app.startWebhook('/setScore', tlsOpts, config.tls.port)
+} else {
+    app.startWebhook('/setScore', null, config.tls.port)
+}
 
 app.startPolling()
