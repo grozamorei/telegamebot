@@ -140,7 +140,7 @@ const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
 
         res.statusCode = 200
         res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Origin", config.host[process.env.NODE_ENV]);
+        res.setHeader("Access-Control-Allow-Origin", 'https://' + config.host[process.env.NODE_ENV] + ':' + config.games.angryFrog);
         res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         res.write(JSON.stringify(body))
         res.end()
