@@ -127,7 +127,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
     const {headers, method, url} = req
-    console.log(headers, method, url)
+    // console.log(headers, method, url)
 
     let body = []
     req.on('error', e => {
@@ -135,8 +135,10 @@ const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
     }).on('data', chunk => {
         body.push(chunk)
     }).on('end', () => {
-        body = Buffer.concat(body).toString()
-        console.log('INCOMING POST DATA: ' + body)
+        body = JSON.parse(Buffer.concat(body).toString())
+        console.log('INCOMING POST DATA: ' + JSON.stringify(body))
+
+        app.telegram.setGameScore(body.userId, body.score, undefined, body.chat, body.messageId)
 
         res.statusCode = 200
         res.setHeader("Access-Control-Allow-Origin", "*");
