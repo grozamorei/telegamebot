@@ -54,14 +54,16 @@ app.command('/playLocal', ctx => gameReply('development', ctx))
 app.command('/playProduction', ctx => gameReply('production', ctx))
 app.gameQuery(ctx => {
     const query = ctx.update.callback_query
-    const sb = ctx.chatDb.getUserSandbox(query.from.id)
-    let gameAddr = config.protocol[sb] + '://' + config.host[sb] + ':' + config.games.angryFrog
-    // simple query
-    gameAddr +=
-        '?userId=' + query.from.id +
-        '&userName=' + query.from.first_name + ' ' + query.from.last_name +
-        '&messageId=' + query.message.message_id +
-        '&chatId=' + query.message.chat.id
+    const sandbox = ctx.chatDb.getUserSandbox(query.from.id)
+    let gameAddr = config.protocol[sandbox] + '://' + config.host[sandbox] + ':' + config.games.angryFrog
+    gameAddr += '?userId=' + query.from.id
+    gameAddr += '&userName=' + query.from.first_name + ' ' + query.from.last_name
+    if ('message' in query) {
+        gameAddr += '&messageId=' + query.message.message_id
+        gameAddr += '&chatId=' + query.message.chat.id
+    } else {
+        gameAddr += '&inlineMessageId=' + query.inline_message_id
+    }
     console.log('redirecting to', encodeURI(gameAddr))
     ctx.answerGameQuery(encodeURI(gameAddr))
 })

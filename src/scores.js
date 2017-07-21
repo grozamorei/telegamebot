@@ -14,7 +14,11 @@ module.exports = (env, config, app) => {
             body = JSON.parse(Buffer.concat(body).toString())
             console.log('INCOMING POST DATA: ' + JSON.stringify(body))
 
-            app.telegram.setGameScore(body.userId, body.score, undefined, body.chatId, body.messageId, true)
+            if ('inlineMessageId' in body) {
+                app.telegram.setGameScore(body.userId, body.score, body.inlineMessageId)
+            } else {
+                app.telegram.setGameScore(body.userId, body.score, body.chatId, body.messageId)
+            }
 
             res.statusCode = 200
             res.setHeader("Access-Control-Allow-Origin", "*");
