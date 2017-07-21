@@ -68,6 +68,16 @@ app.gameQuery(ctx => {
     ctx.answerGameQuery(encodeURI(gameAddr))
 })
 
+app.on('inline_query', ctx => {
+    ctx.answerInlineQuery([
+        {
+            type: 'game',
+            id: ctx.update.update_id,
+            game_short_name: 'angry_frogs'
+        }
+    ], {next_offset: 30})
+})
+
 app.command('/poll', ctx => {
     return ctx.replyWithHTML('<b>One</b> or <i>Another</i>', Markup.inlineKeyboard(
         [
