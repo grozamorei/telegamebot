@@ -55,9 +55,13 @@ app.command('/playProduction', ctx => gameReply('production', ctx))
 app.gameQuery(ctx => {
     const query = ctx.update.callback_query
     const sb = ctx.chatDb.getUserSandbox(query.from.id)
-    let gameAddr = 'https://' + config.host[sb] + ':' + config.games.angryFrog
-    gameAddr += '?userId=' + query.from.id + '&userName=' + query.from.first_name + ' ' + query.from.last_name +
-            '&chat=' + query.chat_instance + '&messageId=' + query.message.message_id
+    let gameAddr = config.protocol[sb] + '://' + config.host[sb] + ':' + config.games.angryFrog
+    // simple query
+    gameAddr +=
+        '?userId=' + query.from.id +
+        '&userName=' + query.from.first_name + ' ' + query.from.last_name +
+        '&messageId=' + query.message.message_id +
+        '&chatId=' + query.message.chat.id
     console.log('redirecting to', encodeURI(gameAddr))
     ctx.answerGameQuery(encodeURI(gameAddr))
 })
@@ -116,37 +120,6 @@ app.on('left_chat_member', ctx => {
     }
 })
 
-
-let tlsOpts = {}
-if (process.env.NODE_ENV === 'production') {
-    const fs = require("fs");
-     tlsOpts = {
-        key: fs.readFileSync(config.tls.key),
-        cert: fs.readFileSync(config.tls.cert)
-    }
-}
-const scoreAccept = require('https').createServer(tlsOpts, (req, res) => {
-    const {headers, method, url} = req
-    // console.log(headers, method, url)
-
-    let body = []
-    req.on('error', e => {
-        console.error(e)
-    }).on('data', chunk => {
-        body.push(chunk)
-    }).on('end', () => {
-        body = JSON.parse(Buffer.concat(body).toString())
-        console.log('INCOMING POST DATA: ' + JSON.stringify(body))
-
-        app.telegram.setGameScore(body.userId, body.score)
-
-        res.statusCode = 200
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Origin", 'https://' + config.host[process.env.NODE_ENV] + ':' + config.games.angryFrog);
-        res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-        res.write(JSON.stringify(body))
-        res.end()
-    })
-}).listen(config.tls.port)
+require('./scores')(process.env.NODE_ENV, config, app)
 
 app.startPolling()
