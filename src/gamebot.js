@@ -69,13 +69,12 @@ app.gameQuery(ctx => {
 })
 
 app.on('inline_query', ctx => {
-    ctx.answerInlineQuery([
-        {
+    return ctx.answerInlineQuery(
+        [{
             type: 'game',
-            id: ctx.update.update_id,
+            id: 'angryFrogsGame',
             game_short_name: 'angry_frogs'
-        }
-    ], {next_offset: 30})
+        }])
 })
 
 app.command('/poll', ctx => {
