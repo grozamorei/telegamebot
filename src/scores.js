@@ -15,9 +15,9 @@ module.exports = (env, config, app) => {
             console.log('INCOMING POST DATA: ' + JSON.stringify(body))
 
             if ('inlineMessageId' in body) {
-                app.telegram.setGameScore(body.userId, body.score, body.inlineMessageId)
+                app.telegram.setGameScore(body.userId, body.score, body.inlineMessageId, undefined, undefined, true)
             } else {
-                app.telegram.setGameScore(body.userId, body.score, body.chatId, body.messageId)
+                app.telegram.setGameScore(body.userId, body.score, undefined, body.chatId, body.messageId, true)
             }
 
             res.statusCode = 200
