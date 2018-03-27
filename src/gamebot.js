@@ -13,124 +13,77 @@ app.context.chatDb = {
     getUserSandbox: user => user in sandboxDb ? sandboxDb[user] : process.env.NODE_ENV
 }
 
-const pingAnswers = ['понг', 'второй понг', 'я же сказал что работает', 'себе команду тереби, сука']
-
-//
-// middleware
-app.use((ctx, next) => {
-    const update = JSON.stringify(ctx.update)
-    console.log(update)
-    if (ctx.updateType === 'message' && ctx.update.message.text !== '/getUpdates') {
-        backlog.push(update)
-    }
-    return next()
-})
-
-app.command('/ping', ctx =>  {
-    const chat = ctx.update.message.chat.id
-    const db = ctx.chatDb
-    db.add(chat)
-    const answer = db.retrieve(chat)
-    if (answer < pingAnswers.length) {
-        ctx.reply(pingAnswers[answer])
-    }
-})
-
+app.command('/ping', ctx => ctx.reply('pong'))
 app.command('/ifconfig', ctx => ctx.reply(require('./getip').do()))
-app.command('/getUpdates', ctx => {
-    ctx.reply(backlog.length > 0 ? backlog.shift() : 'updates empty')
-})
 
-const gameReply = (sandbox, ctx) => {
-    ctx.chatDb.setUserSandbox(ctx.update.message.from.id, sandbox)
-    ctx.replyWithGame('angry_frogs', Extra.markup(
-        Markup.inlineKeyboard([
-            Markup.gameButton('Play')
-        ])
-    ))
-}
-app.command('/play', ctx => gameReply(process.env.NODE_ENV, ctx))
-app.command('/playLocal', ctx => gameReply('development', ctx))
-app.command('/playProduction', ctx => gameReply('production', ctx))
-app.gameQuery(ctx => {
-    const query = ctx.update.callback_query
-    const sandbox = ctx.chatDb.getUserSandbox(query.from.id)
-    let gameAddr = config.protocol[sandbox] + '://' + config.host[sandbox] + ':' + config.games.angryFrog
-    gameAddr += '?userId=' + query.from.id
-    gameAddr += '&userName=' + query.from.first_name + ' ' + query.from.last_name
-    if ('message' in query) {
-        gameAddr += '&messageId=' + query.message.message_id
-        gameAddr += '&chatId=' + query.message.chat.id
-    } else {
-        gameAddr += '&inlineMessageId=' + query.inline_message_id
-    }
-    console.log('redirecting to', encodeURI(gameAddr))
-    ctx.answerGameQuery(encodeURI(gameAddr))
-})
+// const gameReply = (sandbox, ctx) => {
+//     ctx.chatDb.setUserSandbox(ctx.update.message.from.id, sandbox)
+//     ctx.replyWithGame('angry_frogs', Extra.markup(
+//         Markup.inlineKeyboard([
+//             Markup.gameButton('Play')
+//         ])
+//     ))
+// }
+// app.command('/play', ctx => gameReply(process.env.NODE_ENV, ctx))
+// app.command('/playLocal', ctx => gameReply('development', ctx))
+// app.command('/playProduction', ctx => gameReply('production', ctx))
+// app.gameQuery(ctx => {
+//     const query = ctx.update.callback_query
+//     const sandbox = ctx.chatDb.getUserSandbox(query.from.id)
+//     let gameAddr = config.protocol[sandbox] + '://' + config.host[sandbox] + ':' + config.games.angryFrog
+//     gameAddr += '?userId=' + query.from.id
+//     gameAddr += '&userName=' + query.from.first_name + ' ' + query.from.last_name
+//     if ('message' in query) {
+//         gameAddr += '&messageId=' + query.message.message_id
+//         gameAddr += '&chatId=' + query.message.chat.id
+//     } else {
+//         gameAddr += '&inlineMessageId=' + query.inline_message_id
+//     }
+//     console.log('redirecting to', encodeURI(gameAddr))
+//     ctx.answerGameQuery(encodeURI(gameAddr))
+// })
 
-app.on('inline_query', ctx => {
-    return ctx.answerInlineQuery(
-        [{
-            type: 'game',
-            id: 'angryFrogsGame',
-            game_short_name: 'angry_frogs'
-        }])
-})
-
-app.command('/poll', ctx => {
-    return ctx.replyWithHTML('<b>One</b> or <i>Another</i>', Markup.inlineKeyboard(
-        [
-            Markup.callbackButton('One', 'One'),
-            Markup.callbackButton('Another', 'Another'),
-            Markup.callbackButton('Third', 'Third')
-        ]
-    ).extra())
-})
-app.action(/.+/, ctx => {
-    if (ctx.match[0] === 'Third') {
-        return ctx.answerCallbackQuery('oh, you think you smart')
-    }
-    return ctx.answerCallbackQuery('sure, ' + ctx.match[0] + ' is very nice')
-})
-
-
-app.command('/poll2', ctx => {
-    return ctx.reply('Keyboard wrap', Extra.markup(
-        Markup.keyboard(['one', 'two', 'three', 'four', 'five', 'six'], {
-            wrap: (btn, index, currentRow) => currentRow.length >= (index + 1) / 2
-        })
-    ))
-})
-app.hears(['one', 'two', 'three', 'four', 'five', 'six'], (ctx, next) => {
-    return ctx.reply('OUKEY', Markup.removeKeyboard(true).extra()).then(next)
-})
-
-
-app.on('group_chat_created', ctx => {
-    const m = ctx.update.message
-    const groupTitle = m.chat.title
-    ctx.telegram.sendMessage(m.chat.id, "Thanks for invite to group " + groupTitle)
-})
-app.on('new_chat_member', ctx => {
-    const m = ctx.update.message
-    if (m.new_chat_member.username === ctx.me) {
-        const groupTitle = m.chat.title
-        ctx.telegram.sendMessage(m.chat.id, "I've been invited to group " + groupTitle)
-    } else {
-        const newMember = m.new_chat_member.first_name
-        ctx.telegram.sendMessage(m.chat.id, "Welcome, " + newMember)
-    }
-})
-app.on('left_chat_member', ctx => {
-    const m = ctx.update.message
-    if (m.left_chat_member.username === ctx.me) {
-        ctx.telegram.sendMessage(m.chat.id, "So sorry to left your gruop")
-    } else {
-        const leftMember = m.left_chat_member.first_name
-        ctx.telegram.sendMessage(m.chat.id, "Sorry to see you go, " + leftMember)
-    }
-})
+// app.on('group_chat_created', ctx => {
+//     const m = ctx.update.message
+//     const groupTitle = m.chat.title
+//     ctx.telegram.sendMessage(m.chat.id, "Thanks for invite to group " + groupTitle)
+// })
+// app.on('new_chat_member', ctx => {
+//     const m = ctx.update.message
+//     if (m.new_chat_member.username === ctx.me) {
+//         const groupTitle = m.chat.title
+//         ctx.telegram.sendMessage(m.chat.id, "I've been invited to group " + groupTitle)
+//     } else {
+//         const newMember = m.new_chat_member.first_name
+//         ctx.telegram.sendMessage(m.chat.id, "Welcome, " + newMember)
+//     }
+// })
+// app.on('left_chat_member', ctx => {
+//     const m = ctx.update.message
+//     if (m.left_chat_member.username === ctx.me) {
+//         ctx.telegram.sendMessage(m.chat.id, "So sorry to left your gruop")
+//     } else {
+//         const leftMember = m.left_chat_member.first_name
+//         ctx.telegram.sendMessage(m.chat.id, "Sorry to see you go, " + leftMember)
+//     }
+// })
 
 require('./scores')(process.env.NODE_ENV, config, app)
+const notifier = require('./notifier')(
+    config,
+    channel => {
+        app.telegram.sendMessage(config.tw.myself, `CHANNEL ONLINE\n${channel.link}\n${channel.game}\n${channel.view_count}`)
+    },
+    channel => {
+        app.telegram.sendMessage(config.tw.myself, `CHANNEL OFFLINE\n${channel.link}`)
+    })
+app.command('/channelList', ctx => {
+    // console.log(notifier.channels)
+    if (Object.keys(notifier.channels).length === 0) ctx.reply('No channels active :(')
+    Object.keys(notifier.channels).forEach(key => {
+        const ch = notifier.channels[key]
+        ctx.reply(`${ch.link}\n${ch.game}\n${ch.view_count}`)
+    })
+})
 
 app.startPolling()
