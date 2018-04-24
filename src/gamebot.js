@@ -68,7 +68,7 @@ app.command('/ifconfig', ctx => ctx.reply(require('./getip').do()))
 //     }
 // })
 
-require('./scores')(process.env.NODE_ENV, config, app)
+// require('./scores')(process.env.NODE_ENV, config, app)
 const notifier = require('./notifier')(
     config,
     channel => {
